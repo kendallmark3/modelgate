@@ -54,7 +54,7 @@ Set `deterministic=true` only when the desired result can be produced reliably w
 Execute:
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/model-gate/scripts/model-gate.py" \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/model-gate/scripts/model-gate.py" \
   --complexity <0-3> \
   --context <0-3> \
   --consequence <0-3> \

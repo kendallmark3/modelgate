@@ -26,7 +26,7 @@ The commands are stages of one loop, defined in `skills/feature-workflow/SKILL.m
 
 **Intent -> smallest safe delta -> validation -> evidence -> refine only when evidence says so**
 
-Intended order: `/setup-feature` → `/review-intent` → `/model-gate` → `/run-feature` → `/prove-feature`, with `/context-map` and `/simplify` usable at any point. The commands are deliberately thin; the reasoning lives in the three skills (`feature-workflow`, `context-discipline`, `model-gate`).
+Intended order: `/setup-feature` → `/review-intent` → `/model-gate` → `/run-feature` → `/prove-feature`, with `/context-map` and `/simplify` usable at any point. All are files under `commands/` except `/model-gate`, which is the skill invoked directly. The commands are deliberately thin; the reasoning lives in the three skills (`feature-workflow`, `context-discipline`, `model-gate`).
 
 ### ModelGate
 
@@ -79,8 +79,9 @@ Install through the marketplace, from inside Claude Code:
 - **Version**: `plugin.json` `version` (currently `1.1.0`) and the version note in the root `README.md`.
 - **Command and skill lists**: adding or removing a file under `commands/` or `skills/` means updating the lists in `plugins/intent-driven-training/README.md`.
 - **Descriptions**: the plugin description is written separately in `marketplace.json` and `plugin.json`.
-- **Interpreter name**: `SKILL.md` invokes the scorer as `python`, which does not exist on machines that only ship `python3` (stock macOS, for example).
-- **Name overlap**: the plugin's `/simplify` and `/model-gate` share names with a Claude Code built-in and with the plugin's own skill. Refer to them namespaced (`/intent-driven-training:simplify`) when it matters which one runs.
+- **Interpreter name**: invoke the scorer as `python3`. Plain `python` does not exist on machines that only ship `python3` (stock macOS, for example).
+- **No `commands/model-gate.md`**: `/model-gate` comes from the skill. A command file with the same name shadows the skill, and the scorer never runs.
+- **Name overlap**: the plugin's `/simplify` shares a name with a Claude Code built-in. Refer to it namespaced (`/intent-driven-training:simplify`) when it matters which one runs.
 
 ## Editing style
 
