@@ -1,0 +1,14 @@
+{
+  "name": "intent-driven-training",
+  "owner": {"name": "Mark Kendall"},
+  "metadata": {
+    "description": "Intent-Driven Engineering training and workflow starter plugins"
+  },
+  "plugins": [
+    {
+      "name": "intent-driven-training",
+      "source": "./plugins/intent-driven-training",
+      "description": "Lean Intent-Driven Engineering workflow, context discipline, evidence, and model preflight skills"
+    }
+  ]
+}
