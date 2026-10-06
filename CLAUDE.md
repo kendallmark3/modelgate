@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-A Claude Code **plugin marketplace** containing one plugin, `intent-driven-training` (Intent-Driven Engineering training and workflow). It is almost entirely Markdown prompt content plus one small Python script. There is no build step, package manifest, linter, or test suite.
+A Claude Code **plugin marketplace** containing one plugin, `intent-driven-training` (Intent-Driven Engineering training and workflow). It is almost entirely Markdown prompt content plus one small Python script. There is no build step, package manifest, or linter. `tests/` holds unit tests for the scorer and a consistency check for the skill.
 
 The repository is not an application. Standards written for a TypeScript/Node API (Zod validation, `src/routes`, `src/services`, and so on) have nothing to apply to here.
 
@@ -41,8 +41,11 @@ Scoring rules in the script, in precedence order:
 - `--deterministic` → `NO_LLM`, regardless of scores
 - `capability == 3`, or `consequence == 3` with `complexity >= 2` → `REASONING`
 - otherwise by sum (0–12): `<= 3` → `FAST`, `<= 7` → `STANDARD`, else `REASONING`
+- floor: `consequence == 3` is never `FAST`; it is raised to `STANDARD`
 
-The rubric appears in three places: the 0–3 factor definitions in `SKILL.md`, the thresholds in `model-gate.py`, and the tier descriptions in `model-tiers.md` and the plugin `README.md`. Change them together.
+`SKILL.md` pins the preflight to `model: haiku` so the gate stays cheap whatever the session model is, and tells the model to read one file and run the scorer once. Keep that property when editing the skill.
+
+The rubric appears in several places: the 0–3 factor definitions in `SKILL.md`, the thresholds in `model-gate.py`, the rules in the root `README.md`, the assertions in `tests/test_scorer.py`, and the tier descriptions in `model-tiers.md` and the plugin `README.md`. Change them together.
 
 ## Commands
 
@@ -54,6 +57,19 @@ python3 plugins/intent-driven-training/skills/model-gate/scripts/model-gate.py \
 ```
 
 It prints JSON with `tier`, `scores`, and `reason`. Add `--deterministic` to force `NO_LLM`.
+
+Test the scorer (all 256 inputs, no tokens spent):
+
+```bash
+python3 -m unittest discover tests
+python3 -m unittest tests.test_scorer.ScorerTest.test_sum_thresholds   # a single test
+```
+
+Check how consistently the skill scores the sample intents in `tests/intents/`. Each run starts a headless Claude Code session, so this spends tokens (about $0.06 a run); the root `README.md` publishes the last results and should be updated when they change:
+
+```bash
+python3 tests/consistency.py 3
+```
 
 Load the plugin into a session without installing it:
 
@@ -76,7 +92,7 @@ Install through the marketplace, from inside Claude Code:
 
 ## Things to keep consistent
 
-- **Version**: `plugin.json` `version` (currently `1.1.0`) and the version note in the root `README.md`.
+- **Version**: `plugin.json` `version` (currently `1.2.0`) and the layout block in the root `README.md`. Bump it whenever plugin behavior changes, so installed copies update.
 - **Command and skill lists**: adding or removing a file under `commands/` or `skills/` means updating the lists in `plugins/intent-driven-training/README.md`.
 - **Descriptions**: the plugin description is written separately in `marketplace.json` and `plugin.json`.
 - **Interpreter name**: invoke the scorer as `python3`. Plain `python` does not exist on machines that only ship `python3` (stock macOS, for example).

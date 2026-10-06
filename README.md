@@ -11,9 +11,11 @@ It gives you two things:
 
 **Most work does not need the strongest model.** Renaming a config key and redesigning an auth flow are different jobs, but teams tend to run both on whatever model is selected. ModelGate makes the choice explicit and takes about a minute.
 
-**The recommendation is repeatable.** The model only scores four factors from 0 to 3. A small local script turns those scores into a tier, so the same scores always give the same answer, and you can read exactly why in 30 lines of Python.
+**The recommendation is auditable.** The model only scores four factors from 0 to 3. A small local script turns those scores into a tier, so the same scores always give the same answer, and you can read exactly why in about 35 lines of Python. How steady the scores themselves are is [measured below](#how-steady-and-how-cheap-it-is).
 
-**Nothing leaves your machine.** ModelGate calls no extra APIs, does no web research, and benchmarks nothing. It uses the model already running in your session plus the Python standard library.
+**The check itself is cheap.** The preflight runs on the small, fast model whatever your session is set to, reads one file, and runs one script.
+
+**No extra services.** ModelGate calls no other APIs, does no web research, and benchmarks nothing. It uses your existing Claude Code session plus the Python standard library.
 
 **It is vendor-neutral.** The rubric talks about tiers, not products. You map tiers to the models your team is allowed to use, in one file.
 
@@ -88,6 +90,7 @@ The rules apply in this order:
 1. The work is flagged deterministic: `NO_LLM`.
 2. Capability is 3, or consequence is 3 with complexity 2 or more: `REASONING`.
 3. Otherwise, add the four scores (0 to 12): 3 or less is `FAST`, 4 to 7 is `STANDARD`, 8 or more is `REASONING`.
+4. Consequence 3 is never `FAST`. A hard-to-reverse or regulated change gets at least `STANDARD`, however mechanical it looks.
 
 You can run the scorer yourself:
 
@@ -101,6 +104,25 @@ It prints JSON with the tier, the scores, and the reason.
 ### Map tiers to your models
 
 Out of the box ModelGate recommends a tier only. To get a model name, fill in the "Organization mapping" column in [model-tiers.md](plugins/intent-driven-training/skills/model-gate/references/model-tiers.md) with the models your team has approved. Revisit it when prices or availability change.
+
+### How steady and how cheap it is
+
+Measured on 6 October 2026 with [tests/consistency.py](tests/consistency.py): six sample intents, three runs each, in fresh headless sessions.
+
+| Sample intent | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| Sort imports | `NO_LLM` | `NO_LLM` | `NO_LLM` |
+| Rename a config key | `STANDARD` | `FAST` | `FAST` |
+| Add a CSV export | `STANDARD` | `STANDARD` | `STANDARD` |
+| Fix a flaky test | `STANDARD` | `STANDARD` | `STANDARD` |
+| Partial refunds | `REASONING` | `REASONING` | `REASONING` |
+| Drop a sensitive column | `STANDARD` | `STANDARD` | `STANDARD` |
+
+Five of six intents got the same tier every time. The one that moved sits on the boundary between two tiers. A run averaged 16.5 seconds and $0.064.
+
+This is a small sample on one machine. Treat it as a sanity check and rerun the script on your own intents before relying on it.
+
+The preflight is pinned to the small model by `model: haiku` in [SKILL.md](plugins/intent-driven-training/skills/model-gate/SKILL.md). Remove that line to score with whatever model your session is using; in the same test setup that cost about $0.47 a run.
 
 ## The feature loop
 
@@ -133,9 +155,12 @@ Switch to the recommended tier with `/model` before step 4. Move up a tier only 
 
 ```
 .claude-plugin/marketplace.json     marketplace manifest
-plugins/intent-driven-training/     the plugin (v1.1.0)
+plugins/intent-driven-training/     the plugin (v1.2.0)
   commands/                         six workflow commands
   skills/                           feature-workflow, context-discipline, model-gate
+tests/                              scorer unit tests, sample intents, consistency check
 ```
+
+Check the scorer with `python3 -m unittest discover tests`.
 
 Author: Mark Kendall

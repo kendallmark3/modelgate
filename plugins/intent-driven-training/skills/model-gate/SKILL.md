@@ -3,6 +3,7 @@ name: model-gate
 description: Use before implementation when a feature, intent, or plan is ready and the team wants to choose the minimum sufficient model, reduce token spend, or decide whether an LLM is needed at all.
 version: 1.0.0
 allowed-tools: [Read, Glob, Grep, Bash]
+model: haiku
 ---
 # ModelGate
 
@@ -19,9 +20,18 @@ Routing order:
 3. **STANDARD** - normal engineering reasoning
 4. **REASONING** - novel, ambiguous, cross-system, or high-consequence reasoning
 
+## Keep the preflight cheap
+
+The gate must cost far less than the work it gates.
+
+- If an argument names a file, it is relative to the working directory. Read that file and score from it.
+- With no argument, use the plan or intent already in the conversation.
+- Do not explore the repository. Open another file only when the plan does not state its own scope, and then at most two.
+- Run the scorer once.
+
 ## Preflight
 
-Read only enough current context to understand the planned work. Infer these four factors from 0-3:
+Infer these four factors from 0-3:
 
 ### Complexity
 - 0: mechanical / deterministic
@@ -66,7 +76,7 @@ Use the returned tier as the default recommendation unless the feature contains 
 
 ## Output
 
-Keep the answer short:
+Reply with this block and nothing after it:
 
 ```text
 MODEL GATE

@@ -22,6 +22,11 @@ else:
     else:
         tier = "REASONING"
     reason = f"Deterministic score={score}/12 across complexity, context, consequence, and capability."
+    # A hard-to-reverse or regulated change is never routed to the cheapest tier,
+    # however mechanical it looks.
+    if a.consequence == 3 and tier == "FAST":
+        tier = "STANDARD"
+        reason += " Raised from FAST because consequence=3."
 
 print(json.dumps({
     "tier": tier,
